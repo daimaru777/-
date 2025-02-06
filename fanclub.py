@@ -2,8 +2,13 @@ import psycopg2
 
 def connect_db():
     return psycopg2.connect(
-        dbname="fanclub", user="fanclub_adomin", password="your_password", host="localhost", port="5432"
+        dbname="fanclub",       # データベース名（例: fanclub）
+        user="postgres",        # ユーザー名（例: postgres）
+        password="daidai241",   # あなたの実際のパスワード（daidai241）
+        host="localhost",       # サーバーのホスト名
+        port="5432"             # ポート番号（通常は5432）
     )
+
 
 def register():
     conn = connect_db()
@@ -14,8 +19,9 @@ def register():
     email = input("メール: ")
     role = "customer"  # 顧客アカウントのみ登録可能
     
-    cur.execute("INSERT INTO members (username, email, role) VALUES (%s, %s, %s)", 
+    cur.execute("INSERT INTO public.members (username, email, role) VALUES (%s, %s, %s)", 
                 (username, email, role))
+
     conn.commit()
     print("登録完了")
     
@@ -30,7 +36,9 @@ def login():
     username = input("ユーザー名: ")
     email = input("メール: ")
     
-    cur.execute("SELECT id, role FROM members WHERE username = %s AND email = %s", (username, email))
+    # 'public' スキーマを追加
+    cur.execute("SELECT id, role FROM public.members WHERE username = %s AND email = %s", (username, email))
+
     user = cur.fetchone()
     
     if user:
@@ -84,7 +92,7 @@ def staff_menu():
 def view_member(user_id):
     conn = connect_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM members WHERE id = %s", (user_id,))
+    cur.execute("SELECT * FROM public.members WHERE id = %s", (user_id,))
     member = cur.fetchone()
     print("会員情報: ", member)
     cur.close()
@@ -93,7 +101,7 @@ def view_member(user_id):
 def view_all_members():
     conn = connect_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM members WHERE role = 'customer'")
+    cur.execute("SELECT * FROM public.members WHERE role = 'customer'")
     members = cur.fetchall()
     for member in members:
         print(member)
@@ -104,7 +112,7 @@ def update_member(user_id):
     conn = connect_db()
     cur = conn.cursor()
     new_email = input("新しいメール: ")
-    cur.execute("UPDATE members SET email = %s WHERE id = %s", (new_email, user_id))
+    cur.execute("UPDATE public.members SET email = %s WHERE id = %s", (new_email, user_id))
     conn.commit()
     print("更新完了")
     cur.close()
@@ -113,7 +121,7 @@ def update_member(user_id):
 def delete_member(user_id):
     conn = connect_db()
     cur = conn.cursor()
-    cur.execute("DELETE FROM members WHERE id = %s AND role = 'customer'", (user_id,))
+    cur.execute("DELETE FROM public.members WHERE id = %s AND role = 'customer'", (user_id,))
     conn.commit()
     print("削除完了")
     cur.close()
